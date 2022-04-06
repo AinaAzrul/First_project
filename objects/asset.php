@@ -174,6 +174,35 @@ function delete(){
     }
 }
 
+// search products
+function search($keywords){
+  
+    // select all query
+    $query = "SELECT *
+            FROM
+                " . $this->table_name . " 
+            WHERE
+                id LIKE ? OR Asset_no LIKE ? OR Asset_desc LIKE ?
+            ORDER BY
+                id ASC";
+  
+    // prepare query statement
+    $stmt = $this->conn->prepare($query);
+  
+    // sanitize
+    $keywords=htmlspecialchars(strip_tags($keywords));
+    $keywords = "%{$keywords}%";
+  
+    // bind
+    $stmt->bindParam(1, $keywords);
+    $stmt->bindParam(2, $keywords);
+    $stmt->bindParam(3, $keywords);
+  
+    // execute query
+    $stmt->execute();
+  
+    return $stmt;
+}
 
 }
 ?>
