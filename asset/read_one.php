@@ -9,7 +9,10 @@ header('Content-Type: application/json');
 // include database and object files
 include_once '../config/database.php';
 include_once '../objects/asset.php';
-  
+$requestMethod = $_SERVER["REQUEST_METHOD"];
+$strErrorDesc = '';
+
+if (strtoupper($requestMethod) == 'GET'){
 // get database connection
 $database = new Database();
 $db = $database->getConnection();
@@ -37,12 +40,7 @@ if($asset->id!= null){
         "Company_name" => $asset->Company_name,             
   
     );
-  
-    // set response code - 200 OK
-    http_response_code(200);
-  
-    // make it json format
-    echo json_encode($asset_arr);
+
 }
   
 else{
@@ -52,5 +50,27 @@ else{
   
     // tell the user asset does not exist
     echo json_encode(array("message" => "asset does not exist."));
+}
+}
+
+else{
+    $strErrorDesc = 'Method not supported';
+    $strErrorHeader = 'HTTP/1.1 422 Unprocessable Entity';
+}
+
+// send output
+if (!$strErrorDesc) {
+    // set response code - 200 OK
+    http_response_code(200);
+  
+    // show assets data in json format
+    echo json_encode($asset_arr);
+} else {
+    // set response code - 422 unprocessable Entity 
+    http_response_code(422);
+  
+    // tell the user no assets found
+    echo json_encode(
+        array("error" => "Method not supported."));
 }
 ?>

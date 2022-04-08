@@ -17,9 +17,10 @@ $asset = new Asset($db);
   
 // get keywords
 $keywords=isset($_GET["s"]) ? $_GET["s"] : "";
-  
+$id=isset($_GET["id"]) ? $_GET["id"] : "";
+
 // query assets
-$stmt = $asset->search($keywords);
+$stmt = $asset->search($keywords,$id);
 $num = $stmt->rowCount();
   
 // check if more than 0 record found
@@ -44,7 +45,9 @@ if($num>0){
             "Asset_desc" => html_entity_decode($Asset_desc),
             "Category" => $Category,
             "Location" => $Location,
-            "First_calib" => $First_calib
+            "First_calib" => $First_calib,
+            "Second_calib" => $Second_calib,
+            "Third_calib" => $Third_calib
         );
   
         array_push($assets_arr["records"], $asset_item);

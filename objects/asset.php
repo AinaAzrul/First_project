@@ -1,7 +1,7 @@
 <?php
 class Asset{
   
-    // database connection and table name
+    // database connection and table Asset_no
     private $conn;
     private $table_name = "assetlist";
   
@@ -13,7 +13,7 @@ class Asset{
     public $Location;
     public $CalibDate_start;
     public $CalibDate_end;
-    public $Company_name;
+    public $Company_Asset_no;
   
     public function __construct($db){
         $this->conn = $db;
@@ -22,12 +22,8 @@ class Asset{
     // used by select drop-down list
     public function readAll(){
         //select all data
-        $query = "SELECT
-                    *
-                FROM
-                    " . $this->table_name . "
-                ORDER BY
-                    Asset_no";
+        $query = "SELECT * FROM " . $this->table_name . "
+                ORDER BY Asset_no";
   
         $stmt = $this->conn->prepare( $query );
         $stmt->execute();
@@ -51,15 +47,11 @@ public function read(){
         return $stmt;
 }
 
-// create product
+// create asset
 function create(){
-  
     
     // query to insert record
-    $query = "INSERT INTO
-                " . $this->table_name . "
-            SET
-                Asset_no=:Asset_no, Asset_desc=:Asset_desc, Category=:Category, Location=:Location, First_calib=:First_calib";
+    $query = "INSERT INTO " . $this->table_name . " SET  Asset_no=:Asset_no, Asset_desc=:Asset_desc, Category=:Category, Location=:Location, First_calib=:First_calib";
   
     // prepare query
     $stmt = $this->conn->prepare($query);
@@ -88,21 +80,19 @@ function create(){
         return false;
 }
 
-// used when filling up the update product form
+// used when filling up the update asset form
 function readOne(){
   
     // query to read single record
     $query = "SELECT * FROM
                 " . $this->table_name . " 
-            WHERE
-                Asset_no = ?
-            LIMIT
-                0,1";
+            WHERE Asset_no = ?
+            LIMIT 0,1";
     
     // prepare query statement
     $stmt = $this->conn->prepare( $query );
   
-    // bind Asset_no of product to be updated
+    // bind Asset_no of asset to be updated
     $stmt->bindParam(1, $this->Asset_no);
   
     // execute query
@@ -118,7 +108,7 @@ function readOne(){
         $arr = explode(",", $message);
         $CalibDate_start = $arr[0];
         $CalibDate_end = $arr[1];
-        $Company_name = $arr[2];
+        $Company_name= $arr[2];
 
         $row['Asset_no'] ??= '0' ;
    
@@ -137,17 +127,16 @@ function readOne(){
             $this->Company_name = $Company_name;
 
         }
-    
 
         else{
             return false;
         }
     }
 }
-// delete the product
+// delete the asset
 function delete(){
   
-    // delete query
+    // delete query by asset_no
     $query = "DELETE FROM " . $this->table_name . " WHERE Asset_no = ?";
   
     // prepare query
@@ -161,9 +150,8 @@ function delete(){
   
     // execute query
     $stmt->execute();
-    $count = $stmt->rowCount();
     //count the number of row afected by the query
-
+    $count = $stmt->rowCount();
 
     //check is there any query successfully executed
     if($count != '0'){
@@ -174,18 +162,42 @@ function delete(){
     }
 }
 
-// search products
-function search($keywords){
-  
+// search asset
+function search($keywords,$id){
+
+  //search by 2 different parameters 
+    /*if(!empty($id) && !empty($keywords)){
+     
     // select all query
-    $query = "SELECT *
-            FROM
-                " . $this->table_name . " 
-            WHERE
-                id LIKE ? OR Asset_no LIKE ? OR Asset_desc LIKE ?
-            ORDER BY
-                id ASC";
+    $query = "SELECT * FROM " . $this->table_name . " 
+    WHERE (Asset_no LIKE ? OR Asset_desc LIKE ?) AND id LIKE ?
+    ORDER BY id ASC";
+    
+    // prepare query statement
+    $stmt = $this->conn->prepare($query);
   
+    // sanitize
+    $keywords=htmlspecialchars(strip_tags($keywords));
+    $id=htmlspecialchars(strip_tags($id));
+    $id = "%{$id}%";
+    $keywords = "%{$keywords}%";
+  
+    // bind
+    $stmt->bindParam(1, $keywords, PDO::PARAM_STR);
+    $stmt->bindParam(2, $keywords, PDO::PARAM_STR);
+    $stmt->bindParam(3, $id, PDO::PARAM_INT);
+  
+    // execute query
+    $stmt->execute();
+    } */
+
+    //search by Asset_no/asset_desc only
+    if($keywords && !empty($keywords)){
+    // select all query
+    $query = "SELECT * FROM " . $this->table_name . " 
+    WHERE Asset_no LIKE ? OR Asset_desc LIKE ?
+    ORDER BY id ASC";
+    
     // prepare query statement
     $stmt = $this->conn->prepare($query);
   
@@ -196,12 +208,183 @@ function search($keywords){
     // bind
     $stmt->bindParam(1, $keywords);
     $stmt->bindParam(2, $keywords);
-    $stmt->bindParam(3, $keywords);
+  
+    // execute query
+    $stmt->execute();
+    }
+
+    //Search by id no only
+    elseif ($id && !empty($id)) {
+        // select all query
+    $query = "SELECT * FROM " . $this->table_name . " 
+    WHERE id LIKE ?
+    ORDER BY id ASC";
+    
+    // prepare query statement
+    $stmt = $this->conn->prepare($query);
+  
+    // sanitize
+    $id=htmlspecialchars(strip_tags($id));
+    $id = "%{$id}%";
+  
+    // bind
+    $stmt->bindParam(1, $id);
+
+    // execute query
+    $stmt->execute();
+    }
+
+    else{
+        return false;
+    }
+    return $stmt;
+}
+
+// update an asset 
+function update(){
+
+    $query = "UPDATE
+                " . $this->table_name . "
+            SET
+                Asset_no = :Asset_no,
+                Asset_desc = :Asset_desc,
+                Category = :Category,
+                Location = :Location,
+                First_calib = :First_calib,
+                Second_calib = :Second_calib,
+                Third_calib = :Third_calib
+            WHERE
+                id = :id";
+  
+    // prepare query statement
+    $stmt = $this->conn->prepare($query);
+  
+    // sanitize
+    $this->Asset_no = htmlspecialchars(strip_tags($this->Asset_no));
+    $this->Asset_desc = htmlspecialchars(strip_tags($this->Asset_desc));
+    $this->Category = htmlspecialchars(strip_tags($this->Category));
+    $this->Location = htmlspecialchars(strip_tags($this->Location));
+    $this->First_calib = htmlspecialchars(strip_tags($this->First_calib));
+    $this->Second_calib = htmlspecialchars(strip_tags($this->Second_calib));
+    $this->Third_calib = htmlspecialchars(strip_tags($this->Third_calib));
+    $this->id = htmlspecialchars(strip_tags($this->id));
+  
+    // bind new values
+    $stmt->bindParam(':Asset_no', $this->Asset_no);
+    $stmt->bindParam(':Asset_desc', $this->Asset_desc);
+    $stmt->bindParam(':Category', $this->Category);
+    $stmt->bindParam(':Location', $this->Location);
+    $stmt->bindParam(':First_calib', $this->First_calib);
+    $stmt->bindParam(':Second_calib', $this->Second_calib);
+    $stmt->bindParam(':Third_calib', $this->Third_calib);
+    $stmt->bindParam(':id', $this->id);
+  
+    // execute the query
+    if($stmt->execute()){
+        return true;
+    }
+  
+    return false;
+}
+
+// add/update calibration values
+function add_calib($Column_name,$new_calib){
+
+    //check if the column exist or not
+    $query="SHOW COLUMNS FROM " . $this->table_name . " LIKE '$Column_name'";
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute();
+    $row1=$stmt->fetchColumn();
+
+    //if the column name is included
+    if($row1==true){   
+
+    switch($Column_name){
+        case "Second_calib":
+                 $query = "UPDATE " . $this->table_name . "
+                SET Second_calib = :new_calib
+                WHERE id = :id";
+
+            // prepare query statement
+            $stmt = $this->conn->prepare($query);
+
+            // sanitize
+            $this->id = htmlspecialchars(strip_tags($this->id));
+            $this->Second_calib = htmlspecialchars(strip_tags($new_calib));
+   
+            // bind new values
+            $stmt->bindParam(':new_calib',$this->Second_calib); 
+            $stmt->bindParam(':id', $this->id);
+            break;
+
+        case "Third_calib":
+                $query = "UPDATE " . $this->table_name . "
+                SET Third_calib = :new_calib
+                WHERE id = :id";
+
+            // prepare query statement
+            $stmt = $this->conn->prepare($query);
+
+            // sanitize
+            $this->id = htmlspecialchars(strip_tags($this->id));
+            $this->Third_calib = htmlspecialchars(strip_tags($new_calib));
+   
+            // bind new values
+            $stmt->bindParam(':new_calib',$this->Third_calib); 
+            $stmt->bindParam(':id', $this->id);
+            break;
+
+    default:
+            break;
+    }
+
+        // execute the query
+        if($stmt->execute()){
+        return true;
+
+}
+
+        else{
+            return false;
+        }
+  }
+
+  else{
+      return false;
+  }
+}
+
+// read asset with pagination
+public function readPaging($from_record_num, $records_per_page){
+  
+    // select query
+    $query = "SELECT * FROM " . $this->table_name. " 
+            ORDER BY id ASC
+            LIMIT ?, ?";
+  
+    // prepare query statement
+    $stmt = $this->conn->prepare( $query );
+  
+    // bind variable values
+    $stmt->bindParam(1, $from_record_num, PDO::PARAM_INT);
+    $stmt->bindParam(2, $records_per_page, PDO::PARAM_INT);
   
     // execute query
     $stmt->execute();
   
+    // return values from database
     return $stmt;
+}
+
+// used for paging asset
+public function count(){
+    $query = "SELECT COUNT(*) as total_rows FROM " . $this->table_name. "";
+  
+    $stmt = $this->conn->prepare( $query );
+    $stmt->execute();
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+  
+    return $row['total_rows'];
 }
 
 }

@@ -1,5 +1,6 @@
 <?php
-//function to update all values with binded calibration values
+//function to add new calibration column if there is non created
+// if exist, just put in the existing column.
 
 // required headers
 header("Access-Control-Allow-Origin: *");
@@ -21,20 +22,21 @@ $asset = new Asset($db);
   
 // get id of asset to be edited
 $data = json_decode(file_get_contents("php://input"));
+
+//implode the data receive from user input into one array
+$Column_name = $data->Column_name;
+$dateStart = $data->CalibDate_start;
+$dateEnd = $data->CalibDate_end;
+$compName = $data->Company_name;
+$arr = array($dateStart,$dateEnd,$compName);
+$new_calib = implode(',', $arr);
+
 // set ID property of asset to be edited
 $asset->id = $data->id;
-
-// set asset property values
-$asset->Asset_no = $data->Asset_no;
-$asset->Asset_desc = $data->Asset_desc;
-$asset->Category = $data->Category;
-$asset->Location = $data->Location;
-$asset->First_calib = $data->First_calib;
-$asset->Second_calib = $data->Second_calib;
-$asset->Third_calib = $data->Third_calib;
   
 // update the asset
-if($asset->update()){
+//Pass column_name and new_calib(the imploded value)
+if($asset->add_calib($Column_name,$new_calib)){
   
     // set response code - 200 ok
     http_response_code(200);
