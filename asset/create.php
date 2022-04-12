@@ -44,8 +44,7 @@ if(
     $asset->CalibDate_end = $data->CalibDate_end;
     $asset->Company_name = $data->Company_name;
     $asset->First_calib = $First_calib;
-    //$asset->Second_calib = $data->Second_calib;
-    //$asset->Third_calib = $data->Third_calib;
+    
   
     // create the asset
     if($asset->create()){

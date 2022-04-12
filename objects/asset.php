@@ -341,8 +341,7 @@ function add_calib($Column_name,$new_calib){
         // execute the query
         if($stmt->execute()){
         return true;
-
-}
+        }
 
         else{
             return false;
